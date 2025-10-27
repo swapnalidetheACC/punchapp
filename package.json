@@ -1,0 +1,14 @@
+{
+  "name": "punch-app",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "install:all": "cd server && npm ci && cd ../client && npm ci",
+    "build": "cd client && npm run build",
+    "start": "node server/index.js",
+    "dev": "concurrently \"cd server && npm run dev\" \"cd client && npm run dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
