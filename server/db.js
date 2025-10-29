@@ -13,20 +13,23 @@ let bucket;
 export async function connectToBucket() {
   if (bucket) return bucket;
   try {
+    console.log("🔄 Connecting to Couchbase...");
     const cluster = await couchbase.connect(clusterConnStr, {
       username,
       password,
       timeouts: {
-        kvTimeout: 20000, // increase timeout
-        connectTimeout: 20000
+        kvTimeout: 20000,
+        connectTimeout: 20000,
       },
-      tlsVerify: false // for Capella test
+      tlsVerify: false, // disable strict TLS temporarily for Render
     });
+
     bucket = cluster.bucket(bucketName);
     console.log("✅ Connected to Couchbase bucket:", bucketName);
     return bucket;
   } catch (error) {
     console.error("❌ Couchbase connection failed:", error);
-    throw error;
+    // Don't crash app
+    return null;
   }
 }
