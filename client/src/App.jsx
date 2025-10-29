@@ -1,6 +1,4 @@
 import { useState } from "react";
-import Login from "./Login";
-import Register from "./Register";
 import PunchIn from "./PunchIn";
 
 function App() {
