@@ -16,6 +16,11 @@ export async function connectToBucket() {
     const cluster = await couchbase.connect(clusterConnStr, {
       username,
       password,
+      timeouts: {
+        kvTimeout: 20000, // increase timeout
+        connectTimeout: 20000
+      },
+      tlsVerify: false // for Capella test
     });
     bucket = cluster.bucket(bucketName);
     console.log("✅ Connected to Couchbase bucket:", bucketName);
