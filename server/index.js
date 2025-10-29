@@ -1,65 +1,52 @@
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const couchbase = require('couchbase');
-const path = require('path');
+import express from "express";
+import cors from "cors";
+import jwt from "jsonwebtoken";
+import bodyParser from "body-parser";
+import dotenv from "dotenv";
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 3000;
-
-app.use(bodyParser.json());
 app.use(cors());
+app.use(bodyParser.json());
 
-let cluster, bucket, collection;
-async function connectDB() {
-  try {
-    cluster = await couchbase.connect(process.env.COUCHBASE_CONN_STR, {
-      username: process.env.COUCHBASE_USERNAME,
-      password: process.env.COUCHBASE_PASSWORD
-    });
-    bucket = cluster.bucket(process.env.COUCHBASE_BUCKET);
-    collection = bucket.defaultCollection();
-    console.log('✅ Connected to Couchbase');
-  } catch (e) {
-    console.error('❌ Couchbase connection failed:', e);
+// TEMP user (later can move to Couchbase)
+const USERS = [{ username: "admin", password: "password123" }];
+
+// Secret key for JWT
+const SECRET_KEY = process.env.JWT_SECRET || "mysecretkey";
+
+// Login route
+app.post("/api/login", (req, res) => {
+  const { username, password } = req.body;
+  const user = USERS.find(
+    (u) => u.username === username && u.password === password
+  );
+
+  if (!user) {
+    return res.status(401).json({ message: "Invalid credentials" });
   }
-}
-connectDB();
 
-app.post('/api/punch', async (req, res) => {
-  try {
-    const { timestamp, timezoneOffset, note } = req.body;
-    if (!timestamp) return res.status(400).json({ error: 'timestamp required' });
-
-    const id = `punch::${Date.now()}`;
-    const doc = {
-      type: 'punch',
-      timestamp,
-      timezoneOffset,
-      note,
-      createdAt: new Date().toISOString()
-    };
-
-    await collection.upsert(id, doc);
-    res.json({ success: true, id });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to save punch' });
-  }
+  // Generate token
+  const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: "1h" });
+  res.json({ token });
 });
 
-app.get('/api/punches', async (req, res) => {
-  try {
-    const q = `SELECT META().id, p.* FROM \`${process.env.COUCHBASE_BUCKET}\` p WHERE p.type='punch' ORDER BY p.timestamp DESC`;
-    const result = await cluster.query(q);
-    res.json({ success: true, punches: result.rows });
-  } catch (err) {
-    res.status(500).json({ error: 'Failed to fetch punches' });
-  }
+// Middleware to verify token
+const verifyToken = (req, res, next) => {
+  const bearerHeader = req.headers["authorization"];
+  if (!bearerHeader) return res.sendStatus(403);
+
+  const token = bearerHeader.split(" ")[1];
+  jwt.verify(token, SECRET_KEY, (err, authData) => {
+    if (err) return res.sendStatus(403);
+    req.user = authData;
+    next();
+  });
+};
+
+// Protected route (example)
+app.get("/api/punches", verifyToken, (req, res) => {
+  res.json({ message: "This is protected data", user: req.user });
 });
 
-const clientPath = path.join(__dirname, '..', 'client', 'dist');
-app.use(express.static(clientPath));
-app.get('*', (req, res) => res.sendFile(path.join(clientPath, 'index.html')));
-
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(5000, () => console.log("✅ Server running on port 5000"));
