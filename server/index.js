@@ -1,55 +1,61 @@
 import express from "express";
 import cors from "cors";
-import { connectToBucket } from "./db.js";
+import dotenv from "dotenv";
+import couchbase from "couchbase";
+
+dotenv.config();
 
 const app = express();
-
-// ✅ Middlewares
 app.use(cors());
 app.use(express.json());
 
-// Global bucket variable
-let bucket = null;
+// Couchbase setup
+const clusterConnStr = process.env.COUCHBASE_URL;
+const username = process.env.COUCHBASE_USERNAME;
+const password = process.env.COUCHBASE_PASSWORD;
+const bucketName = process.env.COUCHBASE_BUCKET;
 
-// Initialize Couchbase connection
-(async () => {
+let bucket;
+let collection;
+
+// Connect to Couchbase
+async function connectToCouchbase() {
   try {
-    bucket = await connectToBucket();
-    if (!bucket) {
-      console.warn("⚠️ Couchbase not connected — running in limited mode.");
-    } else {
-      console.log("✅ Couchbase connection successful!");
-    }
-  } catch (err) {
-    console.warn("⚠️ Couchbase connection issue, continuing anyway...");
+    const cluster = await couchbase.connect(clusterConnStr, {
+      username,
+      password,
+      configProfile: "wanDevelopment",
+    });
+    bucket = cluster.bucket(bucketName);
+    collection = bucket.defaultCollection();
+    console.log("✅ Couchbase connected successfully!");
+  } catch (error) {
+    console.error("❌ Couchbase connection failed:", error);
   }
-})();
+}
 
-// ✅ Health check route
-app.get("/", (req, res) => {
-  res.send("✅ PunchApp backend is running!");
+connectToCouchbase();
+
+// API route to punch in
+app.post("/api/punchin", async (req, res) => {
+  try {
+    const { user, time } = req.body;
+    const docId = `punch_${Date.now()}`;
+    await collection.insert(docId, { user, time });
+    res.status(200).json({ message: "Punch-in recorded successfully" });
+  } catch (error) {
+    console.error("Error inserting document:", error);
+    res.status(500).json({ error: "Failed to record punch-in" });
+  }
 });
 
-// ✅ Fallback in-memory store (used if Couchbase is offline)
-let punches = [];
+// Root route
+app.get("/", (req, res) => {
+  res.send("Punch App Backend is running 🚀");
+});
 
-// ✅ Punch In/Out API
-app.post("/api/punch", async (req, res) => {
-  const punch = req.body;
-
-  try {
-    if (bucket) {
-      const collection = bucket.defaultCollection();
-      const id = `punch_${Date.now()}`;
-      await collection.upsert(id, punch);
-      console.log("✅ Punch stored in Couchbase:", punch);
-      return res.json({ message: "Punch recorded in Couchbase", punch });
-    } else {
-      punches.push(punch);
-      console.warn("⚠️ Couchbase offline. Punch stored locally.");
-      return res.json({ message: "Punch recorded locally", punch });
-    }
-  } catch (err) {
-    console.error("❌ Error saving punch:", err);
-    punches.push(punch);
-    return res.json({ message: "Punch stored locally (error saving to DB)",
+// Start server
+const PORT = process.env.PORT || 10000;
+app.listen(PORT, () => {
+  console.log(`🚀 Server is running on port ${PORT}`);
+});
