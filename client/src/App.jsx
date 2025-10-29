@@ -2,18 +2,31 @@ import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
-  const [time, setTime] = useState(new Date().toISOString().slice(0, 16));
+  const [time, setTime] = useState("");
   const [note, setNote] = useState("");
   const [punches, setPunches] = useState([]);
-
-  // dynamic greeting
   const [greeting, setGreeting] = useState("");
 
+  // 🕒 auto-update time every second
   useEffect(() => {
-    const hours = new Date().getHours();
-    if (hours < 12) setGreeting("Good Morning, Swapnali ☀️");
-    else if (hours < 18) setGreeting("Good Afternoon, Swapnali 🌤️");
-    else setGreeting("Good Evening, Swapnali 🌙");
+    const updateTime = () => {
+      const now = new Date();
+      // Convert to local datetime format accepted by input
+      const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 16);
+      setTime(localISOTime);
+
+      // Greeting logic
+      const hours = now.getHours();
+      if (hours < 12) setGreeting("Good Morning, Swapnali ☀️");
+      else if (hours < 18) setGreeting("Good Afternoon, Swapnali 🌤️");
+      else setGreeting("Good Evening, Swapnali 🌙");
+    };
+
+    updateTime(); // initial load
+    const interval = setInterval(updateTime, 1000); // update every second
+    return () => clearInterval(interval);
   }, []);
 
   const handlePunch = (type) => {
