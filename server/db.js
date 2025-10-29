@@ -12,6 +12,7 @@ let bucket;
 
 export async function connectToBucket() {
   if (bucket) return bucket;
+
   try {
     console.log("🔄 Connecting to Couchbase...");
     const cluster = await couchbase.connect(clusterConnStr, {
@@ -29,7 +30,7 @@ export async function connectToBucket() {
     return bucket;
   } catch (error) {
     console.error("❌ Couchbase connection failed:", error);
-    // Don't crash app
+    // Don’t crash the app — return null instead
     return null;
   }
 }
