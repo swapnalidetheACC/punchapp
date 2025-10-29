@@ -1,56 +1,78 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
+import "./App.css";
 
-export default function App() {
-  const [time, setTime] = useState('');
-  const [note, setNote] = useState('');
+function App() {
+  const [time, setTime] = useState(new Date().toISOString().slice(0, 16));
+  const [note, setNote] = useState("");
   const [punches, setPunches] = useState([]);
 
+  // dynamic greeting
+  const [greeting, setGreeting] = useState("");
+
   useEffect(() => {
-    const now = new Date();
-    const local = now.toISOString().slice(0,16);
-    setTime(local);
-    loadPunches();
+    const hours = new Date().getHours();
+    if (hours < 12) setGreeting("Good Morning, Swapnali ☀️");
+    else if (hours < 18) setGreeting("Good Afternoon, Swapnali 🌤️");
+    else setGreeting("Good Evening, Swapnali 🌙");
   }, []);
 
-  async function loadPunches() {
-    const res = await fetch('/api/punches');
-    const data = await res.json();
-    if (data.success) setPunches(data.punches);
-  }
-
-  async function punchIn() {
-    const iso = new Date(time).toISOString();
-    const offset = new Date().getTimezoneOffset();
-    await fetch('/api/punch', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({ timestamp: iso, timezoneOffset: offset, note })
-    });
-    setNote('');
-    loadPunches();
-  }
+  const handlePunch = (type) => {
+    const newPunch = {
+      time: new Date(time).toLocaleString(),
+      type: type,
+      note: note || "-",
+    };
+    setPunches([newPunch, ...punches]);
+    setNote("");
+  };
 
   return (
-    <div style={{ fontFamily: 'sans-serif', maxWidth: 600, margin: '2rem auto' }}>
-      <h1>Punch Clock</h1>
-      <div>
-        <label>Time:</label>
-        <input type="datetime-local" value={time} onChange={e=>setTime(e.target.value)} />
+    <div className="app-container">
+      <h1 className="title">⏰ Punch Clock</h1>
+      <h2 className="greeting">{greeting}</h2>
+
+      <div className="card">
+        <label>
+          <strong>Time:</strong>
+        </label>
+        <input
+          type="datetime-local"
+          value={time}
+          onChange={(e) => setTime(e.target.value)}
+        />
+        <label>
+          <strong>Note:</strong>
+        </label>
+        <input
+          type="text"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          placeholder="Optional note..."
+        />
+        <div className="button-group">
+          <button className="punch-in" onClick={() => handlePunch("Punch In")}>
+            Punch In
+          </button>
+          <button className="punch-out" onClick={() => handlePunch("Punch Out")}>
+            Punch Out
+          </button>
+        </div>
       </div>
-      <div>
-        <label>Note:</label>
-        <input type="text" value={note} onChange={e=>setNote(e.target.value)} />
+
+      <div className="history-card">
+        <h3>📜 Past Punches</h3>
+        <ul>
+          {punches.map((p, i) => (
+            <li key={i}>
+              <strong>{p.time}</strong> — {p.type} ({p.note})
+            </li>
+          ))}
+        </ul>
       </div>
-      <button onClick={punchIn}>Punch In</button>
-      <hr/>
-      <h2>Past Punches</h2>
-      <ul>
-        {punches.map(p => (
-          <li key={p.id}>
-            {new Date(p.timestamp).toLocaleString()} — {p.note || '-'}
-          </li>
-        ))}
-      </ul>
+
+      <footer>© {new Date().getFullYear()} PunchApp | Made with 💙 by Swapnali</footer>
     </div>
   );
 }
+
+export default App;
