@@ -1,19 +1,19 @@
 {
-  "name": "Punchapp",
+  "name": "punchapp",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
     "install-client": "cd client && npm install",
     "build": "cd client && npm run build",
     "start": "node server/index.js"
   },
   "dependencies": {
-   "cors": "^2.8.5",
-  "dotenv": "^16.0.3",
-  "express": "^4.18.2",
-  "jsonwebtoken": "^9.0.0",
-  "body-parser": "^1.20.2"
-  },
-  "engines": {
-    "node": "20.x"
+    "express": "^4.18.2",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "body-parser": "^1.20.2",
+    "bcrypt": "^5.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "couchbase": "^4.3.0"
   }
 }
