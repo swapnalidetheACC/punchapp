@@ -6,26 +6,26 @@ function App() {
   const [note, setNote] = useState("");
   const [punches, setPunches] = useState([]);
   const [greeting, setGreeting] = useState("");
+  const [token, setToken] = useState(localStorage.getItem("token") || "");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
 
-  // 🕒 auto-update time every second
+  // Auto-time updater
   useEffect(() => {
     const updateTime = () => {
       const now = new Date();
-      // Convert to local datetime format accepted by input
       const localISOTime = new Date(now.getTime() - now.getTimezoneOffset() * 60000)
         .toISOString()
         .slice(0, 16);
       setTime(localISOTime);
-
-      // Greeting logic
       const hours = now.getHours();
-      if (hours < 12) setGreeting("Good Morning, Swapnali ☀️");
-      else if (hours < 18) setGreeting("Good Afternoon, Swapnali 🌤️");
-      else setGreeting("Good Evening, Swapnali 🌙");
+      if (hours < 12) setGreeting("Good Morning ☀️");
+      else if (hours < 18) setGreeting("Good Afternoon 🌤️");
+      else setGreeting("Good Evening 🌙");
     };
-
-    updateTime(); // initial load
-    const interval = setInterval(updateTime, 1000); // update every second
+    updateTime();
+    const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
 
@@ -39,29 +39,64 @@ function App() {
     setNote("");
   };
 
-  return (
-    <div className="app-container">
-      <h1 className="title">⏰ Punch Clock</h1>
-      <h2 className="greeting">{greeting}</h2>
+  const handleLogin = async () => {
+    try {
+      const res = await fetch("https://punchapp-<your-render-name>.onrender.com/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
 
-      <div className="card">
-        <label>
-          <strong>Time:</strong>
-        </label>
-        <input
-          type="datetime-local"
-          value={time}
-          onChange={(e) => setTime(e.target.value)}
-        />
-        <label>
-          <strong>Note:</strong>
-        </label>
+      if (!res.ok) throw new Error("Invalid credentials");
+
+      const data = await res.json();
+      localStorage.setItem("token", data.token);
+      setToken(data.token);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    setToken("");
+  };
+
+  if (!token) {
+    return (
+      <div className="login-container">
+        <h1>🔐 Punch Clock Login</h1>
+        {error && <p className="error">{error}</p>}
         <input
           type="text"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder="Optional note..."
+          placeholder="Username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
         />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <button onClick={handleLogin}>Login</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="app-container">
+      <div className="header">
+        <h1>⏰ Punch Clock</h1>
+        <button className="logout" onClick={handleLogout}>Logout</button>
+      </div>
+      <h2>{greeting}</h2>
+
+      <div className="card">
+        <label>Time:</label>
+        <input type="datetime-local" value={time} onChange={(e) => setTime(e.target.value)} />
+        <label>Note:</label>
+        <input type="text" value={note} onChange={(e) => setNote(e.target.value)} />
         <div className="button-group">
           <button className="punch-in" onClick={() => handlePunch("Punch In")}>
             Punch In
@@ -73,17 +108,15 @@ function App() {
       </div>
 
       <div className="history-card">
-        <h3>📜 Past Punches</h3>
+        <h3>Past Punches</h3>
         <ul>
           {punches.map((p, i) => (
             <li key={i}>
-              <strong>{p.time}</strong> — {p.type} ({p.note})
+              {p.time} — {p.type} ({p.note})
             </li>
           ))}
         </ul>
       </div>
-
-      <footer>© {new Date().getFullYear()} PunchApp | Made with 💙 by Swapnali</footer>
     </div>
   );
 }
