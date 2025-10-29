@@ -1,61 +1,36 @@
+// server/index.js
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import couchbase from "couchbase";
 
 dotenv.config();
-
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Couchbase setup
-const clusterConnStr = process.env.COUCHBASE_URL;
-const username = process.env.COUCHBASE_USERNAME;
-const password = process.env.COUCHBASE_PASSWORD;
-const bucketName = process.env.COUCHBASE_BUCKET;
+const PORT = process.env.PORT || 5000;
+const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkey";
 
-let bucket;
-let collection;
-
-// Connect to Couchbase
-async function connectToCouchbase() {
+// ✅ Couchbase Connection
+let cluster, bucket, collection;
+(async () => {
   try {
-    const cluster = await couchbase.connect(clusterConnStr, {
-      username,
-      password,
-      configProfile: "wanDevelopment",
+    cluster = await couchbase.connect(process.env.COUCHBASE_CONNSTR, {
+      username: process.env.COUCHBASE_USER,
+      password: process.env.COUCHBASE_PASSWORD,
     });
-    bucket = cluster.bucket(bucketName);
+    bucket = cluster.bucket(process.env.COUCHBASE_BUCKET);
     collection = bucket.defaultCollection();
     console.log("✅ Couchbase connected successfully!");
-  } catch (error) {
-    console.error("❌ Couchbase connection failed:", error);
+  } catch (err) {
+    console.error("❌ Couchbase connection failed:", err);
   }
-}
+})();
 
-connectToCouchbase();
-
-// API route to punch in
-app.post("/api/punchin", async (req, res) => {
-  try {
-    const { user, time } = req.body;
-    const docId = `punch_${Date.now()}`;
-    await collection.insert(docId, { user, time });
-    res.status(200).json({ message: "Punch-in recorded successfully" });
-  } catch (error) {
-    console.error("Error inserting document:", error);
-    res.status(500).json({ error: "Failed to record punch-in" });
-  }
-});
-
-// Root route
-app.get("/", (req, res) => {
-  res.send("Punch App Backend is running 🚀");
-});
-
-// Start server
-const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+// ✅ Middleware to verify JWT token
+const verifyToken = (req, res, next) => {
+  const token = req.headers["authorization"];
+  if (!token) return res.status(403).json({
