@@ -1,11 +1,9 @@
 {
   "name": "punchapp",
   "version": "1.0.0",
-  "type": "module",
   "scripts": {
     "install-client": "cd client && npm install",
-    "build": "cd client && npm run build",
-    "start": "node server/index.js"
+    "build": "cd client && npm run build"
   },
   "dependencies": {
     "express": "^4.19.2",
