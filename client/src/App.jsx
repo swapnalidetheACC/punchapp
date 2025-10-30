@@ -46,4 +46,54 @@ function App() {
               marginRight: "10px",
             }}
           >
-            Punch I
+            Punch In
+          </button>
+        ) : (
+          <button
+            onClick={handlePunchOut}
+            style={{
+              backgroundColor: "#dc3545",
+              color: "white",
+              border: "none",
+              padding: "12px 28px",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginRight: "10px",
+            }}
+          >
+            Punch Out
+          </button>
+        )}
+      </div>
+
+      <div
+        style={{
+          margin: "0 auto",
+          width: "80%",
+          maxWidth: "500px",
+          textAlign: "left",
+          backgroundColor: "white",
+          padding: "20px",
+          borderRadius: "10px",
+          boxShadow: "0 2px 10px rgba(0,0,0,0.1)",
+        }}
+      >
+        <h3 style={{ color: "#007bff", marginBottom: "10px" }}>🕒 Punch Logs</h3>
+        {logs.length === 0 ? (
+          <p style={{ color: "#777" }}>No punch records yet.</p>
+        ) : (
+          <ul style={{ listStyleType: "none", paddingLeft: "0" }}>
+            {logs.map((log, index) => (
+              <li key={index} style={{ marginBottom: "8px", color: "#333" }}>
+                {log}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default App;
