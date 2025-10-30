@@ -1,22 +1,27 @@
-import { useState } from "react";
-import PunchIn from "./PunchIn";
+import React from "react";
 
 function App() {
-  const [token, setToken] = useState(localStorage.getItem("token") || "");
-  const [showRegister, setShowRegister] = useState(false);
+  const handlePunchIn = () => {
+    const time = new Date().toLocaleTimeString();
+    alert(`You punched in at ${time}`);
+  };
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial" }}>
-      <h1>Punch App ⏰</h1>
-      {!token ? (
-        showRegister ? (
-          <Register setShowRegister={setShowRegister} />
-        ) : (
-          <Login setToken={setToken} setShowRegister={setShowRegister} />
-        )
-      ) : (
-        <PunchIn token={token} />
-      )}
+    <div style={{ textAlign: "center", marginTop: "100px" }}>
+      <h1>Punch In App</h1>
+      <button
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#007bff",
+          color: "white",
+          border: "none",
+          borderRadius: "5px",
+          cursor: "pointer",
+        }}
+        onClick={handlePunchIn}
+      >
+        Punch In
+      </button>
     </div>
   );
 }
