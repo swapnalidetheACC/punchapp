@@ -37,3 +37,36 @@ function App() {
             onClick={handlePunchIn}
             style={{
               backgroundColor: "#28a745",
+              color: "white",
+              border: "none",
+              padding: "12px 28px",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginRight: "10px",
+            }}
+          >
+            Punch In
+          </button>
+        ) : (
+          <button
+            onClick={handlePunchOut}
+            style={{
+              backgroundColor: "#dc3545",
+              color: "white",
+              border: "none",
+              padding: "12px 28px",
+              borderRadius: "8px",
+              fontSize: "16px",
+              cursor: "pointer",
+              marginRight: "10px",
+            }}
+          >
+            Punch Out
+          </button>
+        )}
+      </div>
+
+      <div
+        style={{
+          margin:
