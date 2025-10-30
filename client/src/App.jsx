@@ -1,29 +1,39 @@
-import React from "react";
+import React, { useState } from "react";
 
 function App() {
+  const [logs, setLogs] = useState([]);
+  const [punchedIn, setPunchedIn] = useState(false);
+
   const handlePunchIn = () => {
-    const time = new Date().toLocaleTimeString();
-    alert(`You punched in at ${time}`);
+    const time = new Date().toLocaleString();
+    setLogs((prev) => [...prev, `✅ Punched In at ${time}`]);
+    setPunchedIn(true);
+  };
+
+  const handlePunchOut = () => {
+    const time = new Date().toLocaleString();
+    setLogs((prev) => [...prev, `⏰ Punched Out at ${time}`]);
+    setPunchedIn(false);
   };
 
   return (
-    <div style={{ textAlign: "center", marginTop: "100px" }}>
-      <h1>Punch In App</h1>
-      <button
-        style={{
-          padding: "10px 20px",
-          backgroundColor: "#007bff",
-          color: "white",
-          border: "none",
-          borderRadius: "5px",
-          cursor: "pointer",
-        }}
-        onClick={handlePunchIn}
-      >
-        Punch In
-      </button>
-    </div>
-  );
-}
+    <div
+      style={{
+        textAlign: "center",
+        fontFamily: "Segoe UI, Arial, sans-serif",
+        backgroundColor: "#f4f6f8",
+        minHeight: "100vh",
+        paddingTop: "60px",
+      }}
+    >
+      <h1 style={{ color: "#333", fontSize: "32px" }}>👋 Welcome to Punch Clock</h1>
+      <p style={{ color: "#555", marginBottom: "30px", fontSize: "18px" }}>
+        Track your Punch In and Punch Out times below
+      </p>
 
-export default App;
+      <div style={{ marginBottom: "30px" }}>
+        {!punchedIn ? (
+          <button
+            onClick={handlePunchIn}
+            style={{
+              backgroundColor: "#28a745",
